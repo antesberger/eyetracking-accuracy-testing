@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Accuracy Testing</string>
+    <string name="start">Start</string>
+    <string name="name">Name</string>
+</resources>
