@@ -28,50 +28,60 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        writeFileOnInternalStorage(MainActivity.this, "log.txt", "task started");
-
         Bundle bundle = getIntent().getExtras();
         if(bundle != null)
             participant = bundle.getString("participant");
             startTime = bundle.getString("startTime");
 
-        Toast.makeText(
-            MainActivity.this,
-            "Try to focus on the displayed cross.",
-            Toast.LENGTH_SHORT
-        ).show();
+        if (hasEyetrackingStarted()) {
 
-        //shuffle image array
-        int index;
-        List<Integer> randomIndices = new ArrayList();
-        Random random = new Random();
-        for (int i = BOXES.length - 1; i > 0; i--) {
-            index = random.nextInt(i + 1);
-            randomIndices.add(index);
+            writeFileOnInternalStorage(MainActivity.this, "log.txt", "task started");
 
-            if (index != i) {
-                BOXES[index] ^= BOXES[i];
-                BOXES[i] ^= BOXES[index];
-                BOXES[index] ^= BOXES[i];
+            Toast.makeText(
+                    MainActivity.this,
+                    "Try to focus on the displayed cross.",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            //shuffle image array
+            int index;
+            List<Integer> randomIndices = new ArrayList();
+            Random random = new Random();
+            for (int i = BOXES.length - 1; i > 0; i--) {
+                index = random.nextInt(i + 1);
+                randomIndices.add(index);
+
+                if (index != i) {
+                    BOXES[index] ^= BOXES[i];
+                    BOXES[i] ^= BOXES[index];
+                    BOXES[index] ^= BOXES[i];
+                }
             }
-        }
 
-        Handler done = new doneHandler();
-        done.sendMessageDelayed( new Message(), 53000);
-        for (Integer i = 0; i < 9; i++) {
-            Integer j = BOXES[i];
-            Handler showHandler = new toggleTarget();
-            Handler hideHandler = new toggleTarget();
+            Handler done = new doneHandler();
+            done.sendMessageDelayed(new Message(), 53000);
+            for (Integer i = 0; i < 9; i++) {
+                Integer j = BOXES[i];
+                Handler showHandler = new toggleTarget();
+                Handler hideHandler = new toggleTarget();
 
-            Message m1 = new Message();
-            m1.what = j;
-            Message m2 = new Message();
-            m2.what = j;
+                Message m1 = new Message();
+                m1.what = j;
+                Message m2 = new Message();
+                m2.what = j;
 
-            writeFileOnInternalStorage(MainActivity.this, "log.txt", "showing " + j.toString());
-            showHandler.sendMessageDelayed(m1, 5000 * i + 5000);
-            hideHandler.sendMessageDelayed(m2, 5000 * i + 8000);
+                showHandler.sendMessageDelayed(m1, 5000 * i + 5000);
+                hideHandler.sendMessageDelayed(m2, 5000 * i + 8000);
 
+            }
+        } else {
+            Intent intent = new Intent(MainActivity.this, StartScreen.class);
+            startActivity(intent);
+            Toast.makeText(
+                    MainActivity.this,
+                    "Recheck your ID and make sure that the eyetracking has started",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 
@@ -112,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (box.getVisibility() == View.INVISIBLE) {
+                writeFileOnInternalStorage(MainActivity.this, "log.txt", "showing " + msg.what);
                 box.setVisibility(View.VISIBLE);
             } else {
                 box.setVisibility(View.INVISIBLE);
@@ -133,13 +144,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public boolean hasEyetrackingStarted() {
+        File file = new File(MainActivity.this.getFilesDir(), participant + "_" + startTime);
+        if(!file.exists()){
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public void writeFileOnInternalStorage(Context mcoContext, String sFileName, String sBody){
         SimpleDateFormat timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         File file = new File(mcoContext.getFilesDir(), participant + "_" + startTime);
-
-        if(!file.exists()){
-            file.mkdir();
-        }
 
         try{
             File outFile = new File(file, sFileName);
