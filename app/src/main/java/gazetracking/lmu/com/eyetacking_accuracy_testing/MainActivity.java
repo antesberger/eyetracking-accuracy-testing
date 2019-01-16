@@ -146,6 +146,10 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean hasEyetrackingStarted() {
         File file = new File(MainActivity.this.getFilesDir(), participant + "_" + startTime);
+        if (participant.equals("test")) {
+            return true;
+        }
+
         if(!file.exists()){
             return false;
         } else {
